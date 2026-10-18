@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useRouter } from "expo-router";
 
 import {
   View,
@@ -8,6 +9,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  Platform
 } from "react-native";
 
 import {
@@ -33,6 +35,7 @@ type AddImageProps = {
 };
 
 export default function AddImage({ productId }: AddImageProps) {
+  const router = useRouter();
   const [back, setBack] = useState(false);
 
   const [savedPhotos, setSavedPhotos] = useState<string[]>([]);
@@ -119,6 +122,11 @@ export default function AddImage({ productId }: AddImageProps) {
 
 
   const createImageFolder = () => {
+
+    if (Platform.OS === "web") {
+      console.log("Use Android to test local image storage");
+      return null;
+    }
     const folder = new Directory(
       Paths.document,
       "product-images"
@@ -132,6 +140,36 @@ export default function AddImage({ productId }: AddImageProps) {
     return folder;
 
   };
+
+  const handleAddProduct = async () => {
+    // Check if the user selected an image
+    if (photos.length === 0) {
+      Alert.alert("Missing Image", "Please select at least one image.");
+      return;
+    }
+
+    try {
+      const folder = createImageFolder();
+
+      if (!folder) {
+        if (Platform.OS === "web") {
+          window.alert("Please use Android to save product images.");
+        }
+        return;
+      }
+
+      // For now, this only creates the folder.
+      console.log("Folder created:", folder.uri);
+
+      // We will add actual image saving here next.
+
+    } catch (error) {
+      console.error("Saving failed:", error);
+      Alert.alert("Error", "Unable to save product images.");
+    }
+  };
+
+
 
   // REMOVE SELECTED PHOTO
   const removePhoto = (index: number) => {
@@ -204,7 +242,7 @@ export default function AddImage({ productId }: AddImageProps) {
           </Text>
         </View>
 
-   
+
 
       </View>
 
@@ -290,13 +328,15 @@ export default function AddImage({ productId }: AddImageProps) {
       </View>
 
       <View className="flex justify-center p-3 items-center">
-        <Pressable style = {styles.AddProductbtn} 
-        onPress={() => {
-          const folder = createImageFolder();
-          console.log("Folder created: ", folder.uri);
-        }}
-        
-        className="bg-orange-600"><Text className="text-white font-bold text-lg">Add Product</Text></Pressable>
+        <Pressable
+          style={styles.AddProductbtn}
+          onPress={handleAddProduct}
+          className="bg-orange-600"
+        >
+          <Text className="text-white font-bold text-lg">
+            Add Product
+          </Text>
+        </Pressable>
       </View>
 
 
